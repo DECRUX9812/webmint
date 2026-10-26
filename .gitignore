@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+node_modules/
+.last_spec.json
+.pytest_cache/
+*.log

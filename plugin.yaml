@@ -1,0 +1,17 @@
+name: webmint
+version: "0.1.0"
+description: >-
+  Turn a website into a deterministic, verified tool using whatever model Hermes runs.
+  Captures the page with a real browser, has the model write a declarative extraction
+  spec, executes it twice, and only saves it when both runs agree.
+author: "Ritesh Patel (DECRUX9812)"
+homepage: "https://github.com/DECRUX9812/webmint"
+license: MIT
+repository: "https://github.com/DECRUX9812/webmint"
+kind: backend
+provides_tools:
+  - webmint_setup
+  - webmint_mint
+  - webmint_run
+  - webmint_list
+  - webmint_remove
