@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 — 2026-10-26
+
+- `plugin.yaml`: declare `requires_hermes`, tags, homepage and repository (catalog admission)
+- no runtime changes
+
 ## 0.1.0 — 2026-10-26
 
 First public release.

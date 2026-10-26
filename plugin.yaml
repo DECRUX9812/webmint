@@ -1,5 +1,5 @@
 name: webmint
-version: "0.1.0"
+version: "0.1.1"
 description: >-
   Turn a website into a deterministic, verified tool using whatever model Hermes runs.
   Captures the page with a real browser, has the model write a declarative extraction
@@ -9,6 +9,8 @@ homepage: "https://github.com/DECRUX9812/webmint"
 license: MIT
 repository: "https://github.com/DECRUX9812/webmint"
 kind: backend
+requires_hermes: ">=0.22"
+tags: [web, automation, scraping, playwright, model-agnostic]
 provides_tools:
   - webmint_setup
   - webmint_mint
