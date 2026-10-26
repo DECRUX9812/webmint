@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 — 2026-10-26
+
+- `docs/banner.png`: catalog/repo hero image, wired into the README and the catalog entry
+
 ## 0.1.1 — 2026-10-26
 
 - `plugin.yaml`: declare `requires_hermes`, tags, homepage and repository (catalog admission)

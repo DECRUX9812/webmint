@@ -1,5 +1,7 @@
 # webmint
 
+![webmint — learn a site once, prove the spec twice, then never browse it again](docs/banner.png)
+
 **Turn a website into a deterministic, verified tool — using whatever model your agent already runs.**
 
 No OpenAI key. No cloud. No sandbox. The artifact is a JSON file you own.
