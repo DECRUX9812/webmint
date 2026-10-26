@@ -91,15 +91,20 @@ def run_dom(spec: Dict[str, Any], params: Dict[str, Any], timeout: int = 90) -> 
         return {"ok": False, "error": "node >= 18 not found; set WEBMINT_NODE"}
     if not PW_MODULES:
         return {"ok": False, "error": PLAYWRIGHT_HINT}
-    spec_path = os.path.join(PLUGIN_DIR, ".last_spec.json")
-    with open(spec_path, "w", encoding="utf-8") as f:
-        json.dump({**spec, "limit": spec.get("limit") or 25}, f)
-    cmd = [NODE_BIN, os.path.join(PLUGIN_DIR, "wm_extract.cjs"),
-           "--spec", spec_path, "--params", json.dumps(params)]
+    import tempfile
+    fh, spec_path = tempfile.mkstemp(prefix="webmint-spec-", suffix=".json")
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=_node_env())
-    except subprocess.TimeoutExpired:
-        return {"ok": False, "error": f"extraction timed out after {timeout}s"}
+        with os.fdopen(fh, "w", encoding="utf-8") as f:
+            json.dump({**spec, "limit": spec.get("limit") or 25}, f)
+        cmd = [NODE_BIN, os.path.join(PLUGIN_DIR, "wm_extract.cjs"),
+               "--spec", spec_path, "--params", json.dumps(params)]
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=_node_env())
+        except subprocess.TimeoutExpired:
+            return {"ok": False, "error": f"extraction timed out after {timeout}s"}
+    finally:
+        with open(spec_path, "w", encoding="utf-8") as f:  # never leave a stale spec file
+            f.write("")
     out = (p.stdout or "").strip().splitlines()
     for line in reversed(out):
         line = line.strip()

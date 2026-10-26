@@ -126,6 +126,19 @@ python3 -m pytest tests/ -q     # 13 tests: validation, store, verifier gates, r
 Two tests launch Chromium against a local HTML fixture — the extractor and the sibling
 prefix are covered without touching the network.
 
+## Credits
+
+**Pomerado** — [github.com/Pomerado/pomerado](https://github.com/Pomerado/pomerado), MIT — made the case that a
+website should be learned once and replayed instead of re-reasoned every run. webmint is an independent
+implementation of that idea for Hermes Agent: the same shape (capture → spec → verify → tool), rebuilt so the
+learning step runs on whatever model you already have, with the artifact as a JSON spec you own rather than
+generated source. Their Guardian/authority model and job contract are worth reading; nothing is copied here.
+
+**The conversation this came from** — @Gamma_950 ("your browser agent re-reasons every page on every run"),
+@sreecharantwts ("browser use being slow and flaky is the real tax on agents"), @stretchcloud (structure loss in
+markdown flattening), @pamelafox (WebMCP as the endgame). Those posts are the reason the pitch is about
+verification, not speed.
+
 ## License
 
 MIT © Ritesh Patel

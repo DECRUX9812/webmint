@@ -103,6 +103,8 @@ def list_tools() -> List[Dict[str, Any]]:
 
 
 def remove_tool(name: str) -> bool:
+    if not valid_name(name):
+        return False
     import shutil
     d = tool_dir(name)
     if os.path.isdir(d):
