@@ -15,7 +15,7 @@ _TOOLS = [
             "browser, records it, asks the configured model to write a declarative extraction "
             "spec, executes it twice, and only saves it if both runs agree. Use this when a "
             "site task is repeatable (search, listings, stock, prices) and browser automation "
-            "keeps re-improvising. Read-only."),
+            "keeps re-improvising. Uses a fresh signed-out browser; public http(s) URLs only."),
         "parameters": {
             "type": "object",
             "properties": {

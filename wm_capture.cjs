@@ -18,6 +18,8 @@ const waitMs = parseInt(arg('wait-ms', '3500'), 10);
 let actions = [];
 try { actions = JSON.parse(arg('actions', '[]')); } catch (e) { actions = []; }
 if (!url || !out) { console.error('need --url and --out'); process.exit(2); }
+const isHttp = (u) => /^https?:\/\//i.test(String(u || ''));
+if (!isHttp(url)) { console.error(JSON.stringify({ ok: false, error: 'only http(s) URLs are allowed' })); process.exit(2); }
 fs.mkdirSync(out, { recursive: true });
 
 (async () => {
@@ -71,7 +73,7 @@ fs.mkdirSync(out, { recursive: true });
       if (a.type === 'fill') await page.fill(a.selector, a.value, { timeout: 15000 });
       else if (a.type === 'click') await page.click(a.selector, { timeout: 15000 });
       else if (a.type === 'press') await page.press(a.selector || 'body', a.value || 'Enter');
-      else if (a.type === 'goto') await page.goto(a.value, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      else if (a.type === 'goto' && isHttp(a.value)) await page.goto(a.value, { waitUntil: 'domcontentloaded', timeout: 45000 });
       else if (a.type === 'wait') await page.waitForTimeout(a.ms || 1000);
       else if (a.type === 'waitFor') await page.waitForSelector(a.selector, { timeout: 15000 });
     } catch (e) { /* keep going; the model sees what loaded */ }

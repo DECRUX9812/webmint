@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- URL policy: the mint URL, `goto` actions, minted `url_template`s and redirects must be public
+  `http(s)` (Hermes's URL safety check when available; `WEBMINT_ALLOW_PRIVATE_URLS=1` opts in to
+  loopback/private hosts standalone; link-local/metadata always refused)
+- README: describe what capture actions and `http` specs actually do instead of "read-only"
+
 ## 0.1.2 — 2026-10-26
 
 - `docs/banner.png`: catalog/repo hero image, wired into the README and the catalog entry
