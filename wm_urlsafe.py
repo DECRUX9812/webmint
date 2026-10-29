@@ -4,6 +4,9 @@ Inside Hermes the host's own SSRF check (tools.url_safety.is_safe_url) decides, 
 user's Hermes `security.allow_private_urls` setting applies. Standalone, a local check
 with the same rules is used. Loopback/private hosts are allowed only with
 WEBMINT_ALLOW_PRIVATE_URLS=1; link-local and cloud-metadata hosts are always refused.
+
+Known limit (same class as the host check): the host is resolved at check time while
+the fetcher resolves again later, so DNS rebinding can still slip between the two.
 """
 from __future__ import annotations
 

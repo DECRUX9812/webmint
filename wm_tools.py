@@ -15,6 +15,9 @@ CAPTURE = os.path.join(PLUGIN_DIR, "wm_capture.cjs")
 
 
 def _capture(url: str, actions: Optional[list], work: str, wait_ms: int = 3500) -> Dict[str, Any]:
+    why = wm_urlsafe.url_problem(url)
+    if why:
+        return {"ok": False, "error": f"refused {url!r}: {why}"}
     wm_run.ensure_env()
     if not wm_run.NODE_BIN:
         return {"ok": False, "error": "node >= 18 not found; set WEBMINT_NODE"}

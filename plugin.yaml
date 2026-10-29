@@ -1,5 +1,5 @@
 name: webmint
-version: "0.1.3"
+version: "0.1.4"
 description: >-
   Turn a website into a deterministic, verified tool using whatever model Hermes runs.
   Captures the page with a real browser, has the model write a declarative extraction
