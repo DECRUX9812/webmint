@@ -69,6 +69,8 @@ def save_tool(spec: Dict[str, Any], *, capture_dir: Optional[str] = None,
 
 
 def load_tool(name: str) -> Dict[str, Any]:
+    if not valid_name(name):
+        raise ValueError("tool name must be lowercase letters, digits and underscores")
     p = os.path.join(tool_dir(name), "tool.json")
     if not os.path.exists(p):
         raise FileNotFoundError(f"no minted tool named {name!r}")

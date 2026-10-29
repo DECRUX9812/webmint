@@ -35,7 +35,7 @@ webmint tool:   run_website_tool(query="...") → [{title, price}]      (~3.5 s,
 | **Model-agnostic** | The mint calls the host's own `ctx.llm`. Whatever provider/model your agent is on does the work — DeepSeek, Gemini, a local model. Nothing is hardcoded to one vendor. |
 | **Verified, not vibes** | A tool is saved only if it runs twice, returns rows both times, and every declared field is non-empty in most rows. A spec that returns 25 rows of `null` is rejected and repaired, not shipped. |
 | **You own the artifact** | `tool.json` — readable, editable by hand, committable. No service holds your integrations. |
-| **Read-only by design** | It reads pages. It does not submit forms, log in, or write. |
+| **Signed-out by design** | Every capture uses a fresh browser with no cookies or saved logins, and minted specs never replay `Cookie`/`Authorization`. Capture `actions` can fill, click and press keys on the page, and an `http` spec replays the captured request (GET or POST). Only public `http(s)` URLs are opened; loopback/private hosts need `WEBMINT_ALLOW_PRIVATE_URLS=1`. |
 
 ## Tools
 
@@ -62,6 +62,10 @@ Then:
 - **Playwright + Chromium** — found in `$WEBMINT_PW_MODULES`, the plugin's own `node_modules`,
   an existing Pomerado install, or the global npm root. If none is present, `webmint_mint`
   provisions it automatically (set `WEBMINT_NO_AUTO_SETUP=1` to opt out).
+- **URL policy** — the mint URL, `goto` actions, minted `url_template`s and every redirect must be
+  public `http(s)`. Inside Hermes the host's URL safety check decides (honours
+  `security.allow_private_urls`); standalone, set `WEBMINT_ALLOW_PRIVATE_URLS=1` to reach
+  loopback/private hosts. Link-local and cloud-metadata addresses are always refused.
 - Everything else is stdlib Python.
 
 ## Artifact
@@ -113,7 +117,8 @@ mean mint **31.4 s** · mean run **3.5 s** · 6 of 8 sites mintable · break-eve
 - **Bot walls.** Headless Chromium gets 403 on some sites (Chewy, eBay) and an empty page on
   others (DuckDuckGo). Two of eight test sites failed this way. No prompt fixes a fingerprint —
   that needs your own browser profile, which is not in v0.1.
-- **Read-only.** No writes, no logins, no forms.
+- **Not strictly read-only.** It never logs in or uses your cookies, but capture `actions` can
+  fill and submit page forms, and an `http` spec replays the captured request, POST included.
 - **Selectors rot.** `meta.json` records when a tool was verified; re-mint when a run starts
   returning zero rows. A repair cron is not included.
 - **Weak models produce worse specs.** The verifier turns that into a visible failure rather

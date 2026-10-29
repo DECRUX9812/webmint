@@ -5,9 +5,12 @@ import json
 import os
 import shutil
 import subprocess
+import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional
+
+from . import wm_urlsafe
 
 PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -54,15 +57,27 @@ def find_playwright() -> str:
     return ""
 
 
-NODE_BIN = find_node()
-PW_MODULES = find_playwright()
+NODE_BIN = ""
+PW_MODULES = ""
+_resolved = False
+
+
+def ensure_env() -> None:
+    """Resolve NODE_BIN/PW_MODULES on first use.
+
+    Discovery spawns `node -v` and `npm root -g`; running it at import makes every
+    register() pay for subprocesses the session may never call.
+    """
+    if not _resolved:
+        refresh()
 
 
 def refresh() -> None:
     """Re-run discovery after a provisioning step."""
-    global NODE_BIN, PW_MODULES
+    global NODE_BIN, PW_MODULES, _resolved
     NODE_BIN = find_node()
     PW_MODULES = find_playwright()
+    _resolved = True
 PLAYWRIGHT_HINT = ("playwright is not installed for this plugin. Either 'pip install playwright && "
                    "python -m playwright install chromium', or 'npm i playwright' inside the plugin "
                    "directory, or set WEBMINT_PW_MODULES to a node_modules dir containing playwright.")
@@ -86,7 +101,20 @@ def _node_env() -> Dict[str, str]:
     return env
 
 
+class _CheckedRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        why = wm_urlsafe.url_problem(newurl)
+        if why:
+            raise urllib.error.URLError(f"redirect refused: {why}")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def run_dom(spec: Dict[str, Any], params: Dict[str, Any], timeout: int = 90) -> Dict[str, Any]:
+    url = _fill(spec.get("url_template", ""), params)
+    why = wm_urlsafe.url_problem(url)
+    if why:
+        return {"ok": False, "error": f"refused URL: {why}", "url": url}
+    ensure_env()
     if not NODE_BIN:
         return {"ok": False, "error": "node >= 18 not found; set WEBMINT_NODE"}
     if not PW_MODULES:
@@ -112,9 +140,13 @@ def run_dom(spec: Dict[str, Any], params: Dict[str, Any], timeout: int = 90) -> 
         line = line.strip()
         if line.startswith("{"):
             try:
-                return json.loads(line)
+                res = json.loads(line)
             except Exception:
                 continue
+            why = wm_urlsafe.url_problem(res.get("finalUrl") or url)
+            if why:  # the page redirected to a host we refuse to read
+                return {"ok": False, "error": f"page ended on a refused URL: {why}", "url": url}
+            return res
     return {"ok": False, "error": (p.stderr or p.stdout or "no output")[:600]}
 
 
@@ -137,6 +169,9 @@ def _dig(obj: Any, path: str) -> Any:
 def run_http(spec: Dict[str, Any], params: Dict[str, Any], timeout: int = 45) -> Dict[str, Any]:
     http = spec.get("http") or {}
     url = _fill(spec.get("url_template", ""), params)
+    why = wm_urlsafe.url_problem(url)
+    if why:
+        return {"ok": False, "error": f"refused URL: {why}", "url": url}
     body = http.get("body_template")
     if body:
         body = _fill(body, params).encode()
@@ -147,7 +182,7 @@ def run_http(spec: Dict[str, Any], params: Dict[str, Any], timeout: int = 45) ->
         headers[k] = _fill(str(v), params)
     req = urllib.request.Request(url, data=body, headers=headers, method=(http.get("method") or "GET").upper())
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with urllib.request.build_opener(_CheckedRedirect).open(req, timeout=timeout) as r:
             raw = r.read()
             status = r.status
     except Exception as e:

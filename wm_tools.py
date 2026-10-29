@@ -8,13 +8,16 @@ import tempfile
 import time
 from typing import Any, Dict, Mapping, Optional
 
-from . import wm_run, wm_setup, wm_store, wm_synth
+from . import wm_run, wm_setup, wm_store, wm_synth, wm_urlsafe
 
 PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
 CAPTURE = os.path.join(PLUGIN_DIR, "wm_capture.cjs")
 
 
 def _capture(url: str, actions: Optional[list], work: str, wait_ms: int = 3500) -> Dict[str, Any]:
+    wm_run.ensure_env()
+    if not wm_run.NODE_BIN:
+        return {"ok": False, "error": "node >= 18 not found; set WEBMINT_NODE"}
     env = wm_run._node_env()
     cmd = [wm_run.NODE_BIN, CAPTURE, "--url", url, "--out", work, "--wait-ms", str(wait_ms)]
     if actions:
@@ -46,6 +49,12 @@ def mint(args: Mapping | None = None, ctx=None, **kw) -> str:
     model = a.get("model") or None
     if not url or not task:
         return json.dumps({"success": False, "error": "url and task are required"})
+    targets = [url] + [x.get("value") or "" for x in (actions or [])
+                       if isinstance(x, dict) and x.get("type") == "goto"]
+    for target in targets:
+        why = wm_urlsafe.url_problem(target)
+        if why:
+            return json.dumps({"success": False, "stage": "url", "error": f"refused {target!r}: {why}"})
     t0 = time.time()
     setup_info = {"ok": True, "changed": False}
     if not a.get("skip_setup") and os.environ.get("WEBMINT_NO_AUTO_SETUP") != "1":
@@ -62,6 +71,9 @@ def mint(args: Mapping | None = None, ctx=None, **kw) -> str:
         return json.dumps({"success": False, "stage": "capture", "error": cap.get("error")})
     with open(os.path.join(work, "capture.json"), encoding="utf-8") as f:
         capture = json.load(f)
+    why = wm_urlsafe.url_problem(capture.get("finalUrl") or url)
+    if why:  # redirected somewhere we would not have opened directly
+        return json.dumps({"success": False, "stage": "url", "error": f"capture ended on a refused URL: {why}"})
     with open(os.path.join(work, "page.html"), encoding="utf-8", errors="replace") as f:
         html = f.read()
     if not name:
@@ -154,7 +166,7 @@ def run(args: Mapping | None = None, **kw) -> str:
             return json.dumps({"success": False, "error": "params must be a JSON object"})
     try:
         spec = wm_store.load_tool(name)
-    except FileNotFoundError as e:
+    except (FileNotFoundError, ValueError) as e:
         return json.dumps({"success": False, "error": str(e), "available": [t["name"] for t in wm_store.list_tools()]})
     t0 = time.time()
     res = wm_run.run_spec(spec, params)
