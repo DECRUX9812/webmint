@@ -87,7 +87,11 @@ def list_tools() -> List[Dict[str, Any]]:
             with open(p, "r", encoding="utf-8") as f:
                 spec = json.load(f)
             meta_p = os.path.join(base, name, "meta.json")
-            meta = json.load(open(meta_p, encoding="utf-8")) if os.path.exists(meta_p) else {}
+            if os.path.exists(meta_p):
+                with open(meta_p, encoding="utf-8") as f:
+                    meta = json.load(f)
+            else:
+                meta = {}
         except Exception:
             continue
         out.append({

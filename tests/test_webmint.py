@@ -97,6 +97,16 @@ def test_verify_accepts_good_runs(monkeypatch):
     assert v["ok"] and v["runs"] == [2, 2] and v["fill"] == {"title": 100, "url": 100}
 
 
+def test_remove_tool_rejects_unsafe_names(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    wm_store.save_tool(dict(DOM_SPEC), meta={"verified": True})
+    assert wm_store.remove_tool("../") is False
+    assert wm_store.remove_tool("..") is False
+    assert wm_store.remove_tool("") is False
+    assert wm_store.load_tool("demo_tool")["item_selector"] == "li.row"
+    assert wm_store.remove_tool("demo_tool") is True
+
+
 @pytest.mark.skipif(not (wm_run.NODE_BIN and wm_run.PW_MODULES), reason="node/playwright unavailable")
 def test_extract_from_local_fixture(tmp_path):
     html = """<html><body><ul>

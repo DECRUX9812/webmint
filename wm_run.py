@@ -103,8 +103,10 @@ def run_dom(spec: Dict[str, Any], params: Dict[str, Any], timeout: int = 90) -> 
         except subprocess.TimeoutExpired:
             return {"ok": False, "error": f"extraction timed out after {timeout}s"}
     finally:
-        with open(spec_path, "w", encoding="utf-8") as f:  # never leave a stale spec file
-            f.write("")
+        try:
+            os.unlink(spec_path)
+        except OSError:
+            pass
     out = (p.stdout or "").strip().splitlines()
     for line in reversed(out):
         line = line.strip()

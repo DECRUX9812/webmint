@@ -60,8 +60,10 @@ def mint(args: Mapping | None = None, ctx=None, **kw) -> str:
     cap = _capture(url, actions, work)
     if not cap.get("ok"):
         return json.dumps({"success": False, "stage": "capture", "error": cap.get("error")})
-    capture = json.load(open(os.path.join(work, "capture.json"), encoding="utf-8"))
-    html = open(os.path.join(work, "page.html"), encoding="utf-8", errors="replace").read()
+    with open(os.path.join(work, "capture.json"), encoding="utf-8") as f:
+        capture = json.load(f)
+    with open(os.path.join(work, "page.html"), encoding="utf-8", errors="replace") as f:
+        html = f.read()
     if not name:
         import re
         host = re.sub(r"^www\.", "", (capture.get("finalUrl") or url).split("/")[2])
@@ -69,10 +71,10 @@ def mint(args: Mapping | None = None, ctx=None, **kw) -> str:
     spec = None
     err = ""
     import time as _t
-    for attempt, cap in enumerate((55000, 16000, 16000)):
+    for attempt, html_cap in enumerate((55000, 16000, 16000)):
         try:
             spec = wm_synth.ask_model(ctx, task=task, url=url, capture=capture, html=html,
-                                      model=model, html_cap=cap)
+                                      model=model, html_cap=html_cap)
             break
         except Exception as e:
             err = f"{type(e).__name__}: {e}"
